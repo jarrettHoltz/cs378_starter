@@ -54,7 +54,7 @@ const float kEpsilon = 1e-5;
 
 namespace navigation {
 
-Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
+Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward) :
     robot_loc_(0, 0),
     robot_angle_(0),
     robot_vel_(0, 0),
@@ -70,6 +70,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n) :
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
+  this->distance_forward = distance_forward;
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -92,6 +93,7 @@ void Navigation::Run() {
   // Create Helper functions here
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
+  std::cout << distance_forward << std::endl; 
 }
 
 }  // namespace navigation
