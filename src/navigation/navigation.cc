@@ -59,6 +59,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
     robot_angle_(0),
     robot_vel_(0, 0),
     robot_omega_(0),
+    odom_loc_(0,0),
     nav_complete_(true),
     nav_goal_loc_(0, 0),
     nav_goal_angle_(0) {
@@ -83,6 +84,16 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float angle,
                                 const Vector2f& vel,
                                 float ang_vel) {
+  // std::cout << "loc: " << loc << std::endl;
+  // std::cout << "vel: " << vel << std::endl;
+  if(odom_loc_ == Eigen::Vector2f(0,0)){
+    odom_loc_ = loc;
+  }
+  robot_loc_ += loc - odom_loc_;
+  robot_angle_ = angle;
+  robot_vel_ = vel;
+  robot_omega_ = ang_vel;
+  odom_loc_ = loc;
 }
 
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
@@ -93,13 +104,17 @@ void Navigation::Run() {
   // Create Helper functions here
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
-  // float distance_left = distance_forward - std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
-  // float current_speed = std::pow((robot_vel_ * robot_vel_.transpose()).norm(),0.5);
+  float current_distance = std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
+  float current_speed = std::pow((robot_vel_ * robot_vel_.transpose()).norm(),0.5);
 
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
-  msg.velocity = toc->getVelocity();
-  std::cout << msg.velocity << std::endl;
+  // msg.velocity = toc->getVelocity();
+  std::cout << "distance: " << current_distance << std::endl;
+  std::cout << "speed: " << current_speed << std::endl;
+  msg.velocity = toc->getVelocity(current_distance, current_speed);
+  // msg.velocity = -1.0;
+  // std::cout << "next speed: " << msg.velocity << std::endl;
   drive_pub_.publish(msg);
   // if(std::pow(current_speed,2.0)/(2*max_acceleration) < distance_to_travelled){
 

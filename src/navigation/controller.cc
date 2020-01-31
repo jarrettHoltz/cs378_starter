@@ -28,6 +28,9 @@ Controller::Controller(const float total_distance) :
   }
 
 bool Controller::distance_left(Phase p) {
+  if ((total_distance - distance_travelled) < 0){
+    return false;
+  }
   switch (p) {
     case ACCEL: {
       float dist_left = current_speed * timestep + 0.5 * max_acceleration * std::pow(timestep, 2) +
@@ -60,6 +63,29 @@ float Controller::getVelocity(){
 
     distance_travelled += current_speed * timestep - 0.5 * deceleration * std::pow(timestep, 2);
     current_speed = std::max(0.0f, current_speed - deceleration * timestep); 
+  }
+  return current_speed;
+}
+
+float Controller::getVelocity(float distance, float speed){
+  current_speed = speed;
+  distance_travelled = distance;
+  if (current_speed < max_speed && distance_left(ACCEL)) {
+    // accelerate
+    current_speed = 1.0;
+  } else if (current_speed == max_speed && distance_left(CRUISE)) {
+    current_speed = 1.0;
+  } else {
+    // calculate deceleration given the distance left
+    float distance_left = total_distance - distance_travelled;
+    float deceleration = std::pow(current_speed, 2) / (2 * distance_left);
+
+    distance_travelled += current_speed * timestep - 0.5 * deceleration * std::pow(timestep, 2);
+    if(distance_left < 0){
+      current_speed = 0.0;
+    } else {
+      current_speed = std::max(0.0f, current_speed - deceleration * timestep);
+    }
   }
   return current_speed;
 }

@@ -15,6 +15,7 @@ class Controller {
 
     bool distance_left(Phase p);
     float getVelocity();
+    float getVelocity(float distance, float speed);
 
   private:
     // speed constraints
