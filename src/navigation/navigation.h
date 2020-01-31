@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
+#include "controller.h"
 
 #ifndef NAVIGATION_H
 #define NAVIGATION_H
@@ -89,6 +90,9 @@ class Navigation {
 
   // distance to move forward for 1-D TOC
   float distance_forward;
+
+  // 1-D TOC
+  Controller* toc;
 };
 
 }  // namespace navigation

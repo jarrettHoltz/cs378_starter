@@ -70,7 +70,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
-  this->distance_forward = distance_forward;
+  toc = new Controller(distance_forward);
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -93,7 +93,17 @@ void Navigation::Run() {
   // Create Helper functions here
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
-  std::cout << distance_forward << std::endl; 
+  // float distance_left = distance_forward - std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
+  // float current_speed = std::pow((robot_vel_ * robot_vel_.transpose()).norm(),0.5);
+
+  AckermannCurvatureDriveMsg msg;
+  msg.curvature = 0;
+  msg.velocity = toc->getVelocity();
+  std::cout << msg.velocity << std::endl;
+  drive_pub_.publish(msg);
+  // if(std::pow(current_speed,2.0)/(2*max_acceleration) < distance_to_travelled){
+
+  // }
 }
 
 }  // namespace navigation
