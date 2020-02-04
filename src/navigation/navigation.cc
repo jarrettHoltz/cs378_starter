@@ -109,16 +109,9 @@ void Navigation::Run() {
 
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
-  // msg.velocity = toc->getVelocity();
-  //std::cout << "distance: " << current_distance << std::endl;
-  //std::cout << "speed: " << current_speed << std::endl;
+  // using odometry calculations for 1-D TOC
   msg.velocity = toc->getVelocity(current_distance, current_speed);
-  // msg.velocity = -1.0;
-  // std::cout << "next speed: " << msg.velocity << std::endl;
   drive_pub_.publish(msg);
-  // if(std::pow(current_speed,2.0)/(2*max_acceleration) < distance_to_travelled){
-
-  // }
 }
 
 }  // namespace navigation
