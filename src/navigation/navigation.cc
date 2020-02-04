@@ -110,8 +110,8 @@ void Navigation::Run() {
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
   // msg.velocity = toc->getVelocity();
-  std::cout << "distance: " << current_distance << std::endl;
-  std::cout << "speed: " << current_speed << std::endl;
+  //std::cout << "distance: " << current_distance << std::endl;
+  //std::cout << "speed: " << current_speed << std::endl;
   msg.velocity = toc->getVelocity(current_distance, current_speed);
   // msg.velocity = -1.0;
   // std::cout << "next speed: " << msg.velocity << std::endl;
