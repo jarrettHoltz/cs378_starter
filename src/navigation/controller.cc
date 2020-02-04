@@ -28,31 +28,29 @@ Controller::Controller(const float total_distance) :
   }
 
 bool Controller::distance_left(Phase p) {
-  if ((total_distance - distance_travelled) < 0){
-    return false;
-  }
   switch (p) {
     case ACCEL: {
       float dist_left = current_speed * timestep + 0.5 * max_acceleration * std::pow(timestep, 2) +
         std::pow(std::min(max_speed, current_speed + max_acceleration * timestep), 2) / (2 * max_acceleration); 
-      return dist_left < (total_distance - distance_travelled);
+      return dist_left <= (total_distance - distance_travelled) + kEpsilon;
     }
     case CRUISE: {
       float dist_left = max_speed * timestep + std::pow(max_speed, 2) / (2 * max_acceleration); 
-      return dist_left < (total_distance - distance_travelled);
+      return dist_left <= (total_distance - distance_travelled) + kEpsilon;
     }
     default:
       return false; 
   }
 }
 
+// code used for Dead Reckoning
 float Controller::getVelocity(){
-  if (current_speed < max_speed && distance_left(ACCEL)) {
+  if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
     // update distance travelled
     distance_travelled += current_speed * timestep + 0.5 * max_acceleration * std::pow(timestep, 2);
-    // accelerate
+    // accelerate, while capping at max_speed
     current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
-  } else if (current_speed == max_speed && distance_left(CRUISE)) {
+  } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
     // update distance travelled
     distance_travelled += max_speed * timestep;
     // cruise
@@ -67,25 +65,27 @@ float Controller::getVelocity(){
   return current_speed;
 }
 
+// Code used for odometry given distance and speed
 float Controller::getVelocity(float distance, float speed){
   current_speed = speed;
   distance_travelled = distance;
-  if (current_speed < max_speed && distance_left(ACCEL)) {
+  // if travelled distance, simply return 0
+  if (distance_travelled > total_distance + kEpsilon) {
+    return 0.0;
+  }
+
+
+  // check if we can accelerate, cruise or, decelerate
+  if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
     // accelerate
-    current_speed = 1.0;
-  } else if (current_speed == max_speed && distance_left(CRUISE)) {
-    current_speed = 1.0;
+    current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
+  } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
+    // Do nothing, since speed is at cruise speed
   } else {
     // calculate deceleration given the distance left
-    float distance_left = total_distance - distance_travelled;
-    float deceleration = std::pow(current_speed, 2) / (2 * distance_left);
-
-    distance_travelled += current_speed * timestep - 0.5 * deceleration * std::pow(timestep, 2);
-    if(distance_left < 0){
-      current_speed = 0.0;
-    } else {
-      current_speed = std::max(0.0f, current_speed - deceleration * timestep);
-    }
+    float dist_left = total_distance - distance_travelled;
+    float deceleration = std::pow(current_speed, 2) / (2 * dist_left);
+    current_speed = std::max(0.0f, current_speed - deceleration * timestep);
   }
   return current_speed;
 }

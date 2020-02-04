@@ -25,6 +25,7 @@ class Controller {
     static constexpr float max_speed = 1.0f;
     static constexpr float max_acceleration = 3.0f;
     static constexpr float timestep = 0.05f;
+    static constexpr float kEpsilon = 1e-5;
 };
 
 #endif  // CONTROLLER_H
