@@ -54,7 +54,7 @@ const float kEpsilon = 1e-5;
 
 namespace navigation {
 
-Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward) :
+Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature) :
     robot_loc_(0, 0),
     robot_angle_(0),
     robot_vel_(0, 0),
@@ -62,7 +62,8 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
     odom_loc_(0,0),
     nav_complete_(true),
     nav_goal_loc_(0, 0),
-    nav_goal_angle_(0) {
+    nav_goal_angle_(0),
+    distance_travelled(0.0) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
   viz_pub_ = n->advertise<VisualizationMsg>("visualization", 1);
@@ -71,7 +72,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
-  toc = new Controller(distance_forward);
+  toc = new Controller(distance_forward, std::max(std::min(curvature, 1.0f), -1.0f));
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -89,6 +90,7 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
   if(odom_loc_ == Eigen::Vector2f(0,0)){
     odom_loc_ = loc;
   }
+  distance_travelled += std::pow(((loc - odom_loc_) * (loc - odom_loc_).transpose()).norm(),0.5);
   robot_loc_ += loc - odom_loc_;
   robot_angle_ = angle;
   robot_vel_ = vel;
@@ -104,13 +106,15 @@ void Navigation::Run() {
   // Create Helper functions here
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
-  float current_distance = std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
+  // float current_distance = std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
   float current_speed = std::pow((robot_vel_ * robot_vel_.transpose()).norm(),0.5);
 
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
   // using odometry calculations for 1-D TOC
-  msg.velocity = toc->getVelocity(current_distance, current_speed);
+  msg.velocity = toc->getVelocity(distance_travelled, current_speed);
+  msg.curvature = toc->getCurvature();
+  std::cout<<distance_travelled<<std::endl;
   drive_pub_.publish(msg);
 }
 

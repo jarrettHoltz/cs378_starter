@@ -21,10 +21,11 @@ using std::vector;
 using namespace math_util;
 using namespace ros_helpers;
 
-Controller::Controller(const float total_distance) :
+Controller::Controller(const float total_distance, const float curvature) :
   current_speed(0.0),
   distance_travelled(0.0) {
     this->total_distance = total_distance;
+    this->curvature=curvature;
   }
 
 bool Controller::distance_left(Phase p) {
@@ -68,7 +69,7 @@ float Controller::getVelocity(){
 // Code used for odometry given distance and speed
 float Controller::getVelocity(float distance, float speed){
   current_speed = speed;
-  distance_travelled = distance;
+  distance_travelled = distance + current_speed * latency;
   // if travelled distance, simply return 0
   if (distance_travelled > total_distance + kEpsilon) {
     return 0.0;
@@ -87,5 +88,10 @@ float Controller::getVelocity(float distance, float speed){
     float deceleration = std::pow(current_speed, 2) / (2 * dist_left);
     current_speed = std::max(0.0f, current_speed - deceleration * timestep);
   }
+  // std::cout<<curvature<<std::endl;
   return current_speed;
+}
+
+float Controller::getCurvature(){
+	return curvature;
 }
