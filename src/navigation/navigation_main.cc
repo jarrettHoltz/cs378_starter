@@ -67,7 +67,7 @@ DEFINE_string(init_topic,
               "initialpose",
               "Name of ROS topic for initialization");
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
-DEFINE_double(distance_forward, 0.0, "Amount of distance to drive forward");
+DEFINE_double(distance, 0.0, "Amount of distance to drive forward");
 DEFINE_double(curvature, 0.0, "Amount of curvature");
 
 bool run_ = true;
@@ -130,7 +130,7 @@ int main(int argc, char** argv) {
   // Initialize ROS.
   ros::init(argc, argv, "navigation", ros::init_options::NoSigintHandler);
   ros::NodeHandle n;
-  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_distance_forward, FLAGS_curvature);
+  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_distance, FLAGS_curvature);
 
   ros::Subscriber velocity_sub =
       n.subscribe(FLAGS_odom_topic, 1, &OdometryCallback);
