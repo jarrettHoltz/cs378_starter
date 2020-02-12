@@ -84,9 +84,19 @@ void LaserCallback(const sensor_msgs::LaserScan& msg) {
   const Vector2f kLaserLoc(0.2, 0);
 
   static vector<Vector2f> point_cloud_;
+  std::cout << msg.angle_min << std::endl;
+  int range_idx = 0;
+  for (float this_angle = msg.angle_min; this_angle < msg.angle_max; this_angle += msg.angle_increment){
+    float this_range = msg.ranges[++range_idx];
+    if (this_range >= msg.range_min && this_range <= msg.range_max)
+      point_cloud_.push_back(kLaserLoc + Vector2f(cos(this_angle) * this_range, sin(this_angle) * this_range));
+  }
   // TODO Convert the LaserScan to a point cloud
   navigation_->ObservePointCloud(point_cloud_, msg.header.stamp.toSec());
   last_laser_msg_ = msg;
+  for (std::vector<Vector2f>::const_iterator i = point_cloud_.begin(); i != point_cloud_.end(); ++i){
+    std::cout << *i << ' ';
+  }
 }
 
 void OdometryCallback(const nav_msgs::Odometry& msg) {

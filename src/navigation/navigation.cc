@@ -102,6 +102,7 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
+  
 }
 
 void Navigation::Run() {
@@ -116,7 +117,7 @@ void Navigation::Run() {
   // using odometry calculations for 1-D TOC
   msg.velocity = toc->getVelocity(distance_travelled, current_speed);
   msg.curvature = toc->getCurvature();
-  std::cout<<distance_travelled<<std::endl;
+  // std::cout<<distance_travelled<<std::endl;
   drive_pub_.publish(msg);
 }
 
