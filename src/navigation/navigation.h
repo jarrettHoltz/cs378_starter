@@ -88,6 +88,9 @@ class Navigation {
   // Navigation goal angle.
   float nav_goal_angle_;
 
+  // flag used to indicate whether the odometry has just started up or not
+  bool startup;
+
   // distance to move forward for 1-D TOC
   float distance_forward;
   float curvature;

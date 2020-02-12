@@ -63,6 +63,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
     nav_complete_(true),
     nav_goal_loc_(0, 0),
     nav_goal_angle_(0),
+    startup(true),
     distance_travelled(0.0) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
@@ -87,8 +88,9 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
                                 float ang_vel) {
   // std::cout << "loc: " << loc << std::endl;
   // std::cout << "vel: " << vel << std::endl;
-  if(odom_loc_ == Eigen::Vector2f(0,0)){
+  if (startup) {
     odom_loc_ = loc;
+    startup = !startup;
   }
   distance_travelled += std::pow(((loc - odom_loc_) * (loc - odom_loc_).transpose()).norm(),0.5);
   robot_loc_ += loc - odom_loc_;
