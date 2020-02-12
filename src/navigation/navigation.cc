@@ -102,6 +102,9 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
+
+  // default free path length ?
+  float free_path_length = 100;
   float curvature = toc->getCurvature();
   if (std::abs(curvature) < 0.01){
     // TODO: special case
@@ -114,7 +117,6 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
     float r2 = std::pow((abs_r+car_width)*(abs_r+car_width) + car_length*car_length, 0.5);
     for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
       Vector2f p = *i;
-      // std::cout<<p<<std::endl;
       // break;
       float x = p[0];
       float y = p[1];
@@ -122,12 +124,13 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
       float p_norm = (p-c).norm();
       // Obstacle detected
       if (p_norm >= (r1-kEpsilon) && p_norm <= (r2+kEpsilon) && theta > 0){
-        std::cout<<"Obstacle detected"<<std::endl;
-        std::cout<<p<<std::endl;
-        std::cout<<"radius calculated: "<<radius<<std::endl;
-        std::cout<<"p-c norm: "<<p_norm<<std::endl;
-        std::cout<<"r1,r2: "<<r1<<","<<r2<<std::endl;
-        break;
+        // recalculate free path length 
+        float omega = atan2(car_length, radius - car_width);
+        float phi = theta - omega;
+        if (radius * phi < free_path_length) {
+          free_path_length = radius * phi; 
+          std::cout << p << std::endl;
+        }
       }
     }
   }
