@@ -13,3 +13,8 @@ You will be using a fork of this repo for all development in the class. This rep
 1. `git clone <this repository url>` (found in the upper right)
 1. `cd <cloned_repo>`
 1. `make -j`
+
+### Run
+1. `roscore`
+1. `cd ~/f1tenth_course/ ./bin/websocket & ./bin/simulator`
+1. `cd ~/projects/cs378_starter bin/navigation --distance_forward=6.28 --curvature=1.0` 
