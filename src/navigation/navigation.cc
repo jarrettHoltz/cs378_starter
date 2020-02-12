@@ -117,7 +117,6 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
     float r2 = std::pow((abs_r+car_width)*(abs_r+car_width) + car_length*car_length, 0.5);
     for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
       Vector2f p = *i;
-      // break;
       float x = p[0];
       float y = p[1];
       float theta = atan2(x, radius-y);
@@ -128,13 +127,12 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
         float omega = atan2(car_length, radius - car_width);
         float phi = theta - omega;
         if (radius * phi < free_path_length) {
-          free_path_length = radius * phi; 
-          std::cout << p << std::endl;
+          free_path_length = radius * phi;
         }
       }
     }
   }
-  
+  std::cout<<free_path_length<<std::endl;
   
 }
 
