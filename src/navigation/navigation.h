@@ -96,6 +96,9 @@ class Navigation {
   float curvature;
   float distance_travelled;
 
+  // Car specs
+  static constexpr float car_width = 0.031;
+  static constexpr float car_length = 0.055;
   // 1-D TOC
   Controller* toc;
 };

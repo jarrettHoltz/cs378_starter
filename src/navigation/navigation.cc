@@ -92,7 +92,7 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
     odom_loc_ = loc;
     startup = !startup;
   }
-  distance_travelled += std::pow(((loc - odom_loc_) * (loc - odom_loc_).transpose()).norm(),0.5);
+  distance_travelled += (loc - odom_loc_).norm();
   robot_loc_ += loc - odom_loc_;
   robot_angle_ = angle;
   robot_vel_ = vel;
@@ -102,6 +102,36 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
+  float curvature = toc->getCurvature();
+  if (std::abs(curvature) < 0.01){
+    // TODO: special case
+    std::cout<<"Going straight"<<std::endl;
+  } else {
+    float radius = 1/curvature;
+    Vector2f c(0, radius);
+    float abs_r = std::abs(radius);
+    float r1 = abs_r - car_width;
+    float r2 = std::pow((abs_r+car_width)*(abs_r+car_width) + car_length*car_length, 0.5);
+    for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
+      Vector2f p = *i;
+      // std::cout<<p<<std::endl;
+      // break;
+      float x = p[0];
+      float y = p[1];
+      float theta = atan2(x, radius-y);
+      float p_norm = (p-c).norm();
+      // Obstacle detected
+      if (p_norm >= (r1-kEpsilon) && p_norm <= (r2+kEpsilon) && theta > 0){
+        std::cout<<"Obstacle detected"<<std::endl;
+        std::cout<<p<<std::endl;
+        std::cout<<"radius calculated: "<<radius<<std::endl;
+        std::cout<<"p-c norm: "<<p_norm<<std::endl;
+        std::cout<<"r1,r2: "<<r1<<","<<r2<<std::endl;
+        break;
+      }
+    }
+  }
+  
   
 }
 
@@ -110,7 +140,7 @@ void Navigation::Run() {
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
   // float current_distance = std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
-  float current_speed = std::pow((robot_vel_ * robot_vel_.transpose()).norm(),0.5);
+  float current_speed = robot_vel_.norm();
 
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
