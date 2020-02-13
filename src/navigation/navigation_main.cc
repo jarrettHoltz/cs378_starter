@@ -69,6 +69,7 @@ DEFINE_string(init_topic,
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
 DEFINE_double(distance, 0.0, "Amount of distance to drive forward");
 DEFINE_double(curvature, 0.0, "Amount of curvature");
+DEFINE_bool(nolimit, false, "drives until obstacle");
 
 bool run_ = true;
 sensor_msgs::LaserScan last_laser_msg_;
@@ -139,7 +140,7 @@ int main(int argc, char** argv) {
   // Initialize ROS.
   ros::init(argc, argv, "navigation", ros::init_options::NoSigintHandler);
   ros::NodeHandle n;
-  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_distance, FLAGS_curvature);
+  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_distance, FLAGS_curvature, FLAGS_nolimit);
 
   ros::Subscriber velocity_sub =
       n.subscribe(FLAGS_odom_topic, 1, &OdometryCallback);

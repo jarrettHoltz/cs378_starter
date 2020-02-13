@@ -54,7 +54,7 @@ const float kEpsilon = 1e-5;
 
 namespace navigation {
 
-Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature) :
+Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool nolimit) :
     robot_loc_(0, 0),
     robot_angle_(0),
     robot_vel_(0, 0),
@@ -64,7 +64,8 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
     nav_goal_loc_(0, 0),
     nav_goal_angle_(0),
     startup(true),
-    distance_travelled(0.0) {
+    distance_travelled(0.0),
+    nolimit(nolimit) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
   viz_pub_ = n->advertise<VisualizationMsg>("visualization", 1);
@@ -103,12 +104,22 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
                                    double time) {
 
-  // default free path length ?
-  float free_path_length = 100;
+  // default free path length
+  free_path_length = 10;
   float curvature = toc->getCurvature();
   if (std::abs(curvature) < 0.01){
-    // TODO: special case
-    std::cout<<"Going straight"<<std::endl;
+    // std::cout<<"Going straight"<<std::endl;
+    for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
+      Vector2f p = *i;
+      float x = p[0];
+      float y = p[1];
+      if (std::abs(y) < car_width/2) {
+        // TODO: not exact
+        if ((x - car_length) < free_path_length) {
+          free_path_length = x - car_length;
+        }
+      }
+    }
   } else {
     float radius = 1/curvature;
     Vector2f c(0, radius);
@@ -146,7 +157,10 @@ void Navigation::Run() {
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
   // using odometry calculations for 1-D TOC
-  msg.velocity = toc->getVelocity(distance_travelled, current_speed);
+  if(nolimit)
+  	msg.velocity = toc->getVelocity(distance_travelled, current_speed, free_path_length);
+  else
+  	msg.velocity = toc->getVelocity(distance_travelled, current_speed);
   msg.curvature = toc->getCurvature();
   drive_pub_.publish(msg);
 }

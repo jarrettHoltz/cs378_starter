@@ -16,6 +16,7 @@ class Controller {
     bool distance_left(Phase p);
     float getVelocity();
     float getVelocity(float distance, float speed);
+    float getVelocity(float distance, float speed, float free_path_length);
     float getCurvature();
 
   private:

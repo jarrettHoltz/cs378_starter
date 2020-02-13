@@ -44,7 +44,7 @@ bool Controller::distance_left(Phase p) {
   }
 }
 
-// code used for Dead Reckoning
+// code used for Dead Reckoning, part 1
 float Controller::getVelocity(){
   if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
     // update distance travelled
@@ -66,8 +66,35 @@ float Controller::getVelocity(){
   return current_speed;
 }
 
-// Code used for odometry given distance and speed
+// Code used for odometry given distance and speed, part 2
 float Controller::getVelocity(float distance, float speed){
+  current_speed = speed;
+  distance_travelled = distance + current_speed * latency;
+  // if travelled distance, simply return 0
+  if (distance_travelled > total_distance + kEpsilon) {
+    return 0.0;
+  }
+
+
+  // check if we can accelerate, cruise or, decelerate
+  if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
+    // accelerate
+    current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
+  } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
+    // Do nothing, since speed is at cruise speed
+  } else {
+    // calculate deceleration given the distance left
+    float dist_left = total_distance - distance_travelled;
+    float deceleration = std::pow(current_speed, 2) / (2 * dist_left);
+    current_speed = std::max(0.0f, current_speed - deceleration * timestep);
+  }
+  // std::cout<<curvature<<std::endl;
+  return current_speed;
+}
+
+// Code used for obstacle avoidance, Part 3
+float Controller::getVelocity(float distance, float speed, float free_path_length){
+  total_distance = free_path_length + distance;
   current_speed = speed;
   distance_travelled = distance + current_speed * latency;
   // if travelled distance, simply return 0
