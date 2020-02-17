@@ -98,9 +98,9 @@ class Navigation {
   bool obstacle;
   float free_path_length;
 
-  // Car specs
-  static constexpr float car_width = 0.281+0.01;
-  static constexpr float car_length = 0.535+0.01;
+  // Car specs + additional margin for actuation error
+  static constexpr float car_width = 0.281+0.1;
+  static constexpr float car_length = 0.535+0.1;
   // 1-D TOC
   Controller* toc;
 };
