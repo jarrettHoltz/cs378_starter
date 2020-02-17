@@ -114,10 +114,9 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
       float x = p[0];
       float y = p[1];
       if (std::abs(y) < car_width/2) {
-        // TODO: not exact
         if ((x - car_length) < free_path_length) {
-          free_path_length = x - car_length;
-        }
+          free_path_length = x - car_length + caboose_to_base_link;
+       }
       }
     }
   } else {
