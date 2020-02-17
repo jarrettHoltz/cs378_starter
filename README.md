@@ -19,4 +19,4 @@ You will be using a fork of this repo for all development in the class. This rep
 1. `cd ~/f1tenth_course/`
 1. `./bin/websocket & ./bin/simulator`
 1. `cd ~/projects/cs378_starter`
-1. `bin/navigation --distance=6.28 --curvature=1.0 --nolimit` 
+1. `bin/navigation --distance=6.28 --curvature=1.0 --obstacle` 

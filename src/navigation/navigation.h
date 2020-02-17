@@ -46,7 +46,7 @@ class Navigation {
  public:
 
    // Constructor
-  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool nolimit);
+  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool obstacle);
 
   // Used in callback from localization to update position.
   void UpdateLocation(const Eigen::Vector2f& loc, float angle);
@@ -95,7 +95,7 @@ class Navigation {
   float distance_forward;
   float curvature;
   float distance_travelled;
-  bool nolimit;
+  bool obstacle;
   float free_path_length;
 
   // Car specs

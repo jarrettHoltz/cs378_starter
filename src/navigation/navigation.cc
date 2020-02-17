@@ -54,7 +54,7 @@ const float kEpsilon = 1e-5;
 
 namespace navigation {
 
-Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool nolimit) :
+Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool obstacle) :
     robot_loc_(0, 0),
     robot_angle_(0),
     robot_vel_(0, 0),
@@ -65,7 +65,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
     nav_goal_angle_(0),
     startup(true),
     distance_travelled(0.0),
-    nolimit(nolimit) {
+    obstacle(obstacle) {
   drive_pub_ = n->advertise<AckermannCurvatureDriveMsg>(
       "ackermann_curvature_drive", 1);
   viz_pub_ = n->advertise<VisualizationMsg>("visualization", 1);
@@ -157,7 +157,7 @@ void Navigation::Run() {
   AckermannCurvatureDriveMsg msg;
   msg.curvature = 0;
   // using odometry calculations for 1-D TOC
-  if(nolimit)
+  if(obstacle)
   	msg.velocity = toc->getVelocity(distance_travelled, current_speed, free_path_length);
   else
   	msg.velocity = toc->getVelocity(distance_travelled, current_speed);
