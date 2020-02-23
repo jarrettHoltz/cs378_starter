@@ -54,7 +54,7 @@ const float kEpsilon = 1e-5;
 
 namespace navigation {
 
-Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool obstacle) :
+Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float distance, const float curvature, const bool obstacle) :
     robot_loc_(0, 0),
     robot_angle_(0),
     robot_vel_(0, 0),
@@ -74,7 +74,7 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
-  toc = new Controller(distance_forward, std::max(std::min(curvature, 1.0f), -1.0f));
+  toc = new Controller(distance, std::max(std::min(curvature, 1.0f), -1.0f));
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -102,20 +102,33 @@ void Navigation::UpdateOdometry(const Vector2f& loc,
 }
 
 void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
-                                   double time) {
+                                   double time) { 
+  // save point cloud to global vector
+  point_cloud = cloud;
+}
 
-  // default free path length
+void Navigation::Run() {
+  // Create Helper functions here
+  // Milestone 1 will fill out part of this class.
+  // Milestone 3 will complete the rest of navigation.
+  float current_speed = robot_vel_.norm();
+
+
+  // calculate the free path length using the point cloud data
+  // default free path length - range of the sensor
   free_path_length = 10;
+  float w = (car_width / 2) + w_safety_margin;
+  float h = car_length + h_safety_margin;
   float curvature = toc->getCurvature();
-  if (std::abs(curvature) < 0.01){
+  if (std::abs(curvature) <= kEpsilon){
     // std::cout<<"Going straight"<<std::endl;
-    for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
+    for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
       Vector2f p = *i;
       float x = p[0];
       float y = p[1];
-      if (std::abs(y) < car_width/2) {
-        if ((x - car_length) < free_path_length) {
-          free_path_length = x - car_length + caboose_to_base_link;
+      if (std::abs(y) < w) {
+        if ((x - h) < free_path_length) {
+          free_path_length = x - h;
        }
       }
     }
@@ -124,8 +137,8 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
     Vector2f c(0, radius);
     float abs_r = std::abs(radius);
     float r1 = abs_r - car_width;
-    float r2 = std::pow((abs_r+car_width)*(abs_r+car_width) + car_length*car_length, 0.5);
-    for (std::vector<Vector2f>::const_iterator i = cloud.begin(); i != cloud.end(); ++i){
+    float r2 = std::pow((abs_r+w)*(abs_r+w) + h*h, 0.5);
+    for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i) {
       Vector2f p = *i;
       float x = p[0];
       float y = p[1];
@@ -134,7 +147,7 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
       // Obstacle detected
       if (p_norm >= (r1-kEpsilon) && p_norm <= (r2+kEpsilon) && theta > 0){
         // recalculate free path length 
-        float omega = atan2(car_length, radius - car_width);
+        float omega = atan2(h, radius - w);
         float phi = theta - omega;
         if (radius * phi < free_path_length) {
           free_path_length = radius * phi;
@@ -142,24 +155,14 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
       }
     }
   }
-  std::cout<<free_path_length<<std::endl;
-  
-}
-
-void Navigation::Run() {
-  // Create Helper functions here
-  // Milestone 1 will fill out part of this class.
-  // Milestone 3 will complete the rest of navigation.
-  // float current_distance = std::pow((robot_loc_ * robot_loc_.transpose()).norm(),0.5);
-  float current_speed = robot_vel_.norm();
 
   AckermannCurvatureDriveMsg msg;
-  msg.curvature = 0;
   // using odometry calculations for 1-D TOC
-  if(obstacle)
+  if (obstacle) {
   	msg.velocity = toc->getVelocity(distance_travelled, current_speed, free_path_length);
-  else
+  } else {
   	msg.velocity = toc->getVelocity(distance_travelled, current_speed);
+  }
   msg.curvature = toc->getCurvature();
   drive_pub_.publish(msg);
 }

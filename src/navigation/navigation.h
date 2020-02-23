@@ -88,20 +88,23 @@ class Navigation {
   // Navigation goal angle.
   float nav_goal_angle_;
 
+  // private point cloud variable
+  std::vector<Eigen::Vector2f> point_cloud;
+
   // flag used to indicate whether the odometry has just started up or not
   bool startup;
 
   // distance to move forward for 1-D TOC
-  float distance_forward;
   float curvature;
   float distance_travelled;
   bool obstacle;
   float free_path_length;
 
   // Car specs + additional margin for actuation error
-  static constexpr float car_width = 0.281+0.1;
-  static constexpr float car_length = 0.535+0.1;
-  static constexpr float caboose_to_base_link = 0.1;
+  static constexpr float car_width = 0.281;
+  static constexpr float car_length = 0.535;
+  static constexpr float h_safety_margin = 0.015;
+  static constexpr float w_safety_margin = 0.1;
   // 1-D TOC
   Controller* toc;
 };
