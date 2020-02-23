@@ -112,7 +112,8 @@ float Navigation::CalculateFreePathLength() {
   // default free path length = range of the sensor
   float free_path_length = 10;
   float w = (car_width / 2) + w_safety_margin;
-  float h = car_length + h_safety_margin;
+  // accounts for left arc to undershoot
+  float h = (curvature > 0) ? car_length : car_length + h_safety_margin;
   float curvature = toc->getCurvature();
   if (std::abs(curvature) <= kEpsilon){
     // std::cout<<"Going straight"<<std::endl;
