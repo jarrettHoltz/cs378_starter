@@ -112,7 +112,8 @@ float Navigation::CalculateFreePathLength() {
   // default free path length = range of the sensor
   float free_path_length = 10;
   float w = (car_width / 2) + w_safety_margin;
-  float h = car_length + h_safety_margin;
+  // accounts for left arc to undershoot
+  float h = (curvature > 0) ? car_length : car_length + h_safety_margin;
   float curvature = toc->getCurvature();
   if (std::abs(curvature) <= kEpsilon){
     // std::cout<<"Going straight"<<std::endl;
@@ -127,14 +128,15 @@ float Navigation::CalculateFreePathLength() {
       }
     }
   } else {
-    float radius = std::abs(1/curvature);
+    float radius = 1/curvature;
     Vector2f c(0, radius);
-    float r1 = radius - car_width;
-    float r2 = std::pow((radius+w)*(radius+w) + h*h, 0.5);
+    float abs_r = std::abs(radius);
+    float r1 = abs_r - car_width;
+    float r2 = std::pow((abs_r+w)*(abs_r+w) + h*h, 0.5);
     for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i) {
       Vector2f p = *i;
       float x = p[0];
-      float y = (curvature > 0) ? p[1] : -p[1];
+      float y = p[1];
       float theta = atan2(x, radius-y);
       float p_norm = (p-c).norm();
       // Obstacle detected
