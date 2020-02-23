@@ -103,8 +103,8 @@ class Navigation {
   // Car specs + additional margin for actuation error
   static constexpr float car_width = 0.281;
   static constexpr float car_length = 0.535;
-  static constexpr float h_safety_margin = 0.015;
-  static constexpr float w_safety_margin = 0.1;
+  static constexpr float h_safety_margin = 0.0;
+  static constexpr float w_safety_margin = 0.07;
   // 1-D TOC
   Controller* toc;
 };
