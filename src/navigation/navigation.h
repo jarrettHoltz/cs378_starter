@@ -108,7 +108,7 @@ class Navigation {
   static constexpr float h_safety_margin = 0.0;
   static constexpr float w_safety_margin = 0.07;
   static constexpr float right_free_path_length_error = -0.01;
-  static constexpr float left_free_path_length_error = 0.05;
+  static constexpr float left_free_path_length_error = 0.15;
   // 1-D TOC
   Controller* toc;
 };
