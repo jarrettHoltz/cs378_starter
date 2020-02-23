@@ -107,16 +107,10 @@ void Navigation::ObservePointCloud(const vector<Vector2f>& cloud,
   point_cloud = cloud;
 }
 
-void Navigation::Run() {
-  // Create Helper functions here
-  // Milestone 1 will fill out part of this class.
-  // Milestone 3 will complete the rest of navigation.
-  float current_speed = robot_vel_.norm();
-
-
+float Navigation::CalculateFreePathLength() {
   // calculate the free path length using the point cloud data
-  // default free path length - range of the sensor
-  free_path_length = 10;
+  // default free path length = range of the sensor
+  float free_path_length = 10;
   float w = (car_width / 2) + w_safety_margin;
   float h = car_length + h_safety_margin;
   float curvature = toc->getCurvature();
@@ -155,6 +149,18 @@ void Navigation::Run() {
       }
     }
   }
+  std::cout << free_path_length << std::endl;
+  return free_path_length;
+}
+
+void Navigation::Run() {
+  // Create Helper functions here
+  // Milestone 1 will fill out part of this class.
+  // Milestone 3 will complete the rest of navigation.
+  float current_speed = robot_vel_.norm();
+  float free_path_length = CalculateFreePathLength();
+
+  
 
   AckermannCurvatureDriveMsg msg;
   // using odometry calculations for 1-D TOC

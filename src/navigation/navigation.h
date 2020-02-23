@@ -98,7 +98,9 @@ class Navigation {
   float curvature;
   float distance_travelled;
   bool obstacle;
-  float free_path_length;
+
+  // logic to calculate free path length
+  float CalculateFreePathLength();
 
   // Car specs + additional margin for actuation error
   static constexpr float car_width = 0.281;
