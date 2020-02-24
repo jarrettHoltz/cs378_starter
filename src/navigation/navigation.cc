@@ -150,7 +150,7 @@ float Navigation::CalculateFreePathLength() {
     }
   }
   std::cout << free_path_length << std::endl;
-  return (curvature < 0) ? free_path_length + right_free_path_length_error : free_path_length + left_free_path_length_error;
+  return free_path_length;
 }
 
 void Navigation::Run() {
