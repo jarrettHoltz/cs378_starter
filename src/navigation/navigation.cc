@@ -148,8 +148,8 @@ float Navigation::CalculateFreePathLength() {
         // recalculate free path length 
         float omega = atan2(h, abs_r - w);
         float phi = theta - omega;
-        if (radius * phi < free_path_length) {
-          free_path_length = radius * phi;
+        if (abs_r * phi < free_path_length) {
+          free_path_length = abs_r * phi;
         }
       }
     }
