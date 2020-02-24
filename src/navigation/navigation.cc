@@ -280,7 +280,7 @@ void Navigation::Run() {
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
   float current_speed = robot_vel_.norm();
-  float free_path_length = CalculateFreePathLength();
+  FindBestPath();
 
   
 
