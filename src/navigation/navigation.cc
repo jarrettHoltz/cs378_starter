@@ -139,9 +139,10 @@ namespace navigation {
       float x = r * std::sin(option->free_path_length/r);
       float y = r - r * std::cos(option->free_path_length/r);
       Vector2f fpl_point(x, y);
-      Vector2f local_goal(0, carrot);
+      Vector2f local_goal(carrot, 0);
       Vector2f c(0, r);
       Vector2f tangent_point = (local_goal - c).normalized() * std::abs(r) + c;
+      std::cout<<tangent_point<<std::endl;
       float tangent_theta;
       if (option->curvature < 0){
         tangent_theta = atan2(tangent_point[0], tangent_point[1]-r);
@@ -149,6 +150,7 @@ namespace navigation {
         tangent_theta = atan2(tangent_point[0], r-tangent_point[1]);}
       if (tangent_theta  <= option->theta_max) {
         // when cloest point of approach is in the free path length
+        std::cout<<tangent_theta<<std::endl;
         option->free_path_length = tangent_theta * std::abs(r);
         option->distance_to_goal = (local_goal - tangent_point).norm();
       } else {
