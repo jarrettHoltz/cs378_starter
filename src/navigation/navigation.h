@@ -119,7 +119,7 @@ class Navigation {
 
 
   // max clearance and weights for scoring function
-  static constexpr float max_clearance = 0.15;
+  static constexpr float max_clearance = 0.5;
   static constexpr float w1 = 3.0;
   static constexpr float w2 = -3.0;
   // 1-D TOC
