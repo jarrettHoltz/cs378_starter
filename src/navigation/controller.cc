@@ -30,26 +30,27 @@ float Controller::compensate_latency() {
   float compensation = 0;
   float interval = latency;
   while (interval > kEpsilon && !command_buf.empty()) {
-    std::pair<Phase, float> command = command_buf.front();
+    std::tuple<Phase, float, float> command = command_buf.front();
     command_buf.pop_front();
-    Phase p = command.first;
-    float phase_time = command.second;
+    Phase p = std::get<0>(command);
+    float phase_time = std::get<1>(command);
+    float speed_at_t = std::get<2>(command);
     float time_running = (interval - phase_time > kEpsilon) ? phase_time : interval;
     switch (p) {
       case ACCEL:
-        compensation += 0.5 * max_acceleration * std::pow(time_running, 2) + current_speed * time_running;
+        compensation += 0.5 * max_acceleration * std::pow(time_running, 2) + speed_at_t * time_running;
         break;
       case CRUISE:
-        compensation += current_speed * time_running;
+        compensation += speed_at_t * time_running;
         break;
       case DECEL:
-        compensation += 0.5 * -max_acceleration * std::pow(time_running, 2) + current_speed * time_running;
+        compensation += 0.5 * -max_acceleration * std::pow(time_running, 2) + speed_at_t * time_running;
         break;
     }
 
     // check if we need to put command back on the queue since there is runtime left over
     if (phase_time - time_running > kEpsilon) {
-      std::pair<Phase, float> push_front = make_pair(p, phase_time - time_running);
+      std::tuple<Phase, float, float> push_front = std::make_tuple(p, phase_time - time_running, speed_at_t);
       command_buf.push_front(push_front); 
     }
     interval -= time_running;
@@ -85,18 +86,18 @@ float Controller::getVelocity(float distance, float speed){
 
   // check if we can accelerate, cruise or, decelerate
   if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
+    command_buf.push_back(std::make_tuple(ACCEL, timestep, current_speed));
     // accelerate
     current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
-    command_buf.push_back(make_pair(ACCEL, timestep));
   } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
     // Do nothing, since speed is at cruise speed
-    command_buf.push_back(make_pair(CRUISE, timestep));
+    command_buf.push_back(std::make_tuple(CRUISE, timestep, current_speed));
   } else {
+    command_buf.push_back(std::make_tuple(DECEL, timestep, current_speed));
     // calculate deceleration given the distance left
     float dist_left = total_distance - distance_travelled;
     float deceleration = std::pow(current_speed, 2) / (2 * dist_left);
     current_speed = std::max(0.0f, current_speed - deceleration * timestep);
-    command_buf.push_back(make_pair(DECEL, timestep));
   }
   // std::cout<<curvature<<std::endl;
   return current_speed;

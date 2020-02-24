@@ -32,7 +32,7 @@ class Controller {
     static constexpr float latency = 0.12;
 
     // command buffer to forward predict latency
-    std::deque<std::pair<Phase, float>> command_buf;    
+    std::deque<std::tuple<Phase, float, float>> command_buf;    
 };
 
 #endif  // CONTROLLER_H
