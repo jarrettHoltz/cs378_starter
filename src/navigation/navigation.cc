@@ -60,7 +60,7 @@ namespace navigation {
     robot_vel_(0, 0),
     robot_omega_(0),
     odom_loc_(0,0),
-    nav_complete_(false),
+    nav_complete_(true),
     nav_goal_loc_(0, 0),
     nav_goal_angle_(0),
     startup(true),
@@ -182,55 +182,54 @@ namespace navigation {
     }
   }
 
-void Navigation::CalculateFreePathLength(PathOption* path) {
-  // calculate the free path length using the point cloud data
-  // default free path length = range of the sensor
-  path->free_path_length = 10;
-  float w = (car_width / 2) + w_safety_margin;
-  float h = car_length + h_safety_margin;
-  if (std::abs(path->curvature) <= kEpsilon){
-    // std::cout<<"Going straight"<<std::endl;
-    for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
-      Vector2f p = *i;
-      float x = p[0];
-      float y = p[1];
-      if (std::abs(y) < w) {
-        if ((x - h) < path->free_path_length) {
-          path->free_path_length = x - h;
+  void Navigation::CalculateFreePathLength(PathOption* path) {
+    // calculate the free path length using the point cloud data
+    // default free path length = range of the sensor
+    path->free_path_length = 10;
+    float w = (car_width / 2) + w_safety_margin;
+    float h = car_length + h_safety_margin;
+    if (std::abs(path->curvature) <= kEpsilon){
+      // std::cout<<"Going straight"<<std::endl;
+      for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
+        Vector2f p = *i;
+        float x = p[0];
+        float y = p[1];
+        if (std::abs(y) < w) {
+          if ((x - h) < path->free_path_length) {
+            path->free_path_length = x - h;
+          }
         }
       }
-    }
-  } else {
-    float radius = 1/path->curvature;
-    Vector2f c(0, radius);
-    float abs_radius = std::abs(radius);
-    float r1 = abs_radius - w;
-    float r2 = std::pow((abs_radius+w)*(abs_radius+w) + h*h, 0.5);
-    for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i) {
-      Vector2f p = *i;
-      float x = p[0];
-      float y = std::abs(p[1]);
-      float theta = atan2(x, abs_radius-y);
-      float p_norm = (p-c).norm();
-      // Obstacle detected
-      if (p_norm >= r1 && p_norm <= r2 && theta > 0){
-        // recalculate free path length 
-        float omega = atan2(h, abs_radius - w);
-        float phi = theta - omega;
-        if (abs_radius * phi < path->free_path_length) {
-          path->free_path_length = abs_radius * phi;
-          path->theta_max = theta;
+    } else {
+      float radius = 1/path->curvature;
+      Vector2f c(0, radius);
+      float abs_radius = std::abs(radius);
+      float r1 = abs_radius - w;
+      float r2 = std::pow((abs_radius+w)*(abs_radius+w) + h*h, 0.5);
+      for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i) {
+        Vector2f p = *i;
+        float x = p[0];
+        float y = std::abs(p[1]);
+        float theta = atan2(x, abs_radius-y);
+        float p_norm = (p-c).norm();
+        // Obstacle detected
+        if (p_norm >= r1 && p_norm <= r2 && theta > 0){
+          // recalculate free path length 
+          float omega = atan2(h, abs_radius - w);
+          float phi = theta - omega;
+          if (abs_radius * phi < path->free_path_length) {
+            path->free_path_length = abs_radius * phi;
+            path->theta_max = theta;
+          }
         }
       }
     }
   }
-}
 
-void Navigation::Run() {
-  // Create Helper functions here
-  // Milestone 1 will fill out part of this class.
-  // Milestone 3 will complete the rest of navigation.
-  while (!nav_complete_) {
+  void Navigation::Run() {
+    // Create Helper functions here
+    // Milestone 1 will fill out part of this class.
+    // Milestone 3 will complete the rest of navigation.
     float current_speed = robot_vel_.norm();
     FindBestPath();
 
@@ -241,6 +240,5 @@ void Navigation::Run() {
     msg.curvature = bestOption->curvature;
     drive_pub_.publish(msg);
   }
-}
 
 }  // namespace navigation
