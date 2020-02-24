@@ -67,8 +67,7 @@ DEFINE_string(init_topic,
               "initialpose",
               "Name of ROS topic for initialization");
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
-DEFINE_double(x, 0.0, "navigation goal x");
-DEFINE_double(y, 0.0, "navigation goal y");
+DEFINE_double(carrot, 1.0, "Carrot for receding local goal");
 
 bool run_ = true;
 sensor_msgs::LaserScan last_laser_msg_;
@@ -138,7 +137,7 @@ int main(int argc, char** argv) {
   // Initialize ROS.
   ros::init(argc, argv, "navigation", ros::init_options::NoSigintHandler);
   ros::NodeHandle n;
-  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_x, FLAGS_y);
+  navigation_ = new Navigation(FLAGS_map, &n, FLAGS_carrot);
 
   ros::Subscriber velocity_sub =
       n.subscribe(FLAGS_odom_topic, 1, &OdometryCallback);

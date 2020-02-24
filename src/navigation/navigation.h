@@ -37,16 +37,18 @@ struct PathOption {
   float curvature;
   float clearance;
   float free_path_length;
-  Eigen::Vector2f obstruction;
-  Eigen::Vector2f closest_point;
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+  float distance_to_goal;
+  float theta_max;
+  //Eigen::Vector2f obstruction;
+  //Eigen::Vector2f closest_point;
+  //EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 };
 
 class Navigation {
  public:
 
    // Constructor
-  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, float x, float y);
+  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, const float carrot);
 
   // Used in callback from localization to update position.
   void UpdateLocation(const Eigen::Vector2f& loc, float angle);
@@ -97,17 +99,29 @@ class Navigation {
   // distance to move forward for 1-D TOC
   float distance_travelled;
 
-  // logic to calculate free path length
-  float CalculateFreePathLength();
+  // distance for receding goal
+  float carrot;
+
+  // best path to take 
+  PathOption* bestOption;
+
+  // logic to calculate best path
+  void CalculateFreePathLength(PathOption* p);
   void FindBestPath();
-  void CalculatePath(const std::vector<Eigen::Vector2f>& cloud, const float curvature, float *max_free_path_length, float *max_clearance, float *distance_to_goal);
-  float curvature;
-  float free_path_length;
+  void CalculatePath(PathOption* p);
+  void ComputeClearance(PathOption* p);
+  void ComputeDistanceToGoal(PathOption* p);
   // Car specs + additional margin for actuation error
   static constexpr float car_width = 0.281;
   static constexpr float car_length = 0.535;
   static constexpr float h_safety_margin = 0.01;
   static constexpr float w_safety_margin = 0.07;
+
+
+  // max clearance and weights for scoring function
+  static constexpr float max_clearance = 0.15;
+  static constexpr float w1 = 1.0;
+  static constexpr float w2 = 0.0;
   // 1-D TOC
   Controller* toc;
 };
