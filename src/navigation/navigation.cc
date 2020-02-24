@@ -94,6 +94,7 @@ namespace navigation {
       startup = !startup;
     }
     distance_travelled += (loc - odom_loc_).norm();
+    carrot -= (loc - odom_loc_).norm();
     robot_loc_ += loc - odom_loc_;
     robot_angle_ = angle;
     robot_vel_ = vel;
@@ -108,7 +109,7 @@ namespace navigation {
   }
 
   void Navigation::FindBestPath() {
-    float best_score = -std::numeric_limits<float>::infinity();
+    float best_score = 0;
     for (float current_curvature=-1.0; current_curvature<=1.0; current_curvature+=0.1) {
       PathOption* currentOption = new PathOption();
       currentOption->curvature = current_curvature;
@@ -116,6 +117,10 @@ namespace navigation {
       ComputeClearance(currentOption);
       ComputeDistanceToGoal(currentOption);
       float current_path_score = currentOption->free_path_length + w1 * currentOption->clearance + w2 * currentOption->distance_to_goal;
+      std::cout << "#####curvature: " << current_curvature << ", cost: " <<  current_path_score << ", max_free_path_length: " << currentOption->free_path_length << ", max_clearance: " << currentOption->clearance << ", distance_to_goal: " << currentOption->distance_to_goal << std::endl;
+
+      if  (current_curvature == -1.0){
+        best_score = current_path_score -1;}
       if (current_path_score > best_score){
         bestOption = currentOption; 
         best_score = current_path_score;
@@ -158,8 +163,14 @@ namespace navigation {
         float r = 1/option->curvature;
         float abs_r = std::abs(r);
         Vector2f c(0.0, r);
-        float theta = atan2(x, std::abs(r) - std::abs(y));
-        if (std::abs((c-p).norm()-r) < max_clearance && theta > 0 && theta < option->theta_max) {
+        float theta;
+        if (option->curvature < 0){
+          theta = atan2(x, y-r);
+        } else {
+          theta = atan2(x, r-y);}
+        // float p_norm = (p-c).norm();
+
+        if (std::abs((c-p).norm()-abs_r) < max_clearance && theta > 0 && theta < option->theta_max) {
           // compute clearance 
           if ((c - p).norm() > r) {
             float r2 = std::pow((abs_r+w)*(abs_r+w) + h*h, 0.5); 
@@ -173,7 +184,7 @@ namespace navigation {
           }
         }
       } 
-
+      // std::cout<<clearance<<std::endl;
       // set option clearance if less than current
       if (clearance < option->clearance) {
         option->clearance = clearance;
@@ -205,12 +216,19 @@ void Navigation::CalculateFreePathLength(PathOption* path) {
     float abs_radius = std::abs(radius);
     float r1 = abs_radius - w;
     float r2 = std::pow((abs_radius+w)*(abs_radius+w) + h*h, 0.5);
+    //std::cout<<"++++++"<<std::endl;
     for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i) {
+      //std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~"<<std::endl;
       Vector2f p = *i;
       float x = p[0];
-      float y = std::abs(p[1]);
-      float theta = atan2(x, abs_radius-y);
+      float y = p[1];
+      float theta;
+      if (path->curvature < 0){
+        theta = atan2(x, y-radius);
+      } else {
+        theta = atan2(x, radius-y);}
       float p_norm = (p-c).norm();
+      //std::cout<<"~~~~~~~~~~~~~~~~~~~~~~~~~"<<p_norm<<std::endl;
       // Obstacle detected
       if (p_norm >= r1 && p_norm <= r2 && theta > 0){
         // recalculate free path length 
@@ -229,17 +247,16 @@ void Navigation::Run() {
   // Create Helper functions here
   // Milestone 1 will fill out part of this class.
   // Milestone 3 will complete the rest of navigation.
-  while (!nav_complete_) {
-    float current_speed = robot_vel_.norm();
-    FindBestPath();
+  float current_speed = robot_vel_.norm();
+  // std::cout<<"!!!!!!!!!!!!!!"<<std::endl;
+  FindBestPath();
+  // std::cout<<"##############"<<std::endl;
 
-
-    AckermannCurvatureDriveMsg msg;
-    // using odometry calculations for 1-D TOC
-    msg.velocity = toc->getVelocity(distance_travelled, current_speed, bestOption->free_path_length);
-    msg.curvature = bestOption->curvature;
-    drive_pub_.publish(msg);
-  }
+  AckermannCurvatureDriveMsg msg;
+  // using odometry calculations for 1-D TOC
+  msg.velocity = toc->getVelocity(distance_travelled, current_speed, bestOption->free_path_length);
+  msg.curvature = bestOption->curvature;
+  drive_pub_.publish(msg);
 }
 
 }  // namespace navigation
