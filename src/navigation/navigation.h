@@ -99,7 +99,10 @@ class Navigation {
 
   // logic to calculate free path length
   float CalculateFreePathLength();
-
+  void FindBestPath();
+  void CalculatePath(const std::vector<Eigen::Vector2f>& cloud, const float curvature, float *max_free_path_length, float *max_clearance, float *distance_to_goal);
+  float curvature;
+  float free_path_length;
   // Car specs + additional margin for actuation error
   static constexpr float car_width = 0.281;
   static constexpr float car_length = 0.535;

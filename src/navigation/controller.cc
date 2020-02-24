@@ -21,10 +21,9 @@ using std::vector;
 using namespace math_util;
 using namespace ros_helpers;
 
-Controller::Controller(const float total_distance) :
+Controller::Controller() :
   current_speed(0.0),
   distance_travelled(0.0) {
-    this->total_distance = total_distance;
   }
 
 bool Controller::distance_left(Phase p) {

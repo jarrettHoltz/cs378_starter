@@ -11,7 +11,7 @@ class Controller {
   public:
 
     // Constructor
-    explicit Controller(const float total_distance);
+    explicit Controller();
 
     bool distance_left(Phase p);
     float getVelocity();

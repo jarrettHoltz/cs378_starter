@@ -120,7 +120,7 @@ float best_cost = -1;
   float w1 = 1.0;
   float w2 = -3.0;
   for (float this_curvature=-1.0; this_curvature<=1.0; this_curvature+=0.1){
-    CalculatePath(cloud, this_curvature, &max_free_path_length, &max_clearance, &distance_to_goal);
+    CalculatePath(point_cloud, this_curvature, &max_free_path_length, &max_clearance, &distance_to_goal);
     float this_cost = max_free_path_length + w1 * max_clearance + w2 * distance_to_goal;
     if (this_curvature == -1.0){
       best_cost = this_cost - 1;}
@@ -150,7 +150,7 @@ void Navigation::CalculatePath(const vector<Vector2f>& cloud, const float curvat
       float x = p[0];
       float y = p[1];
       if (std::abs(y) < car_width/2) {
-        this_free_path_length = std::min(this_free_path_length, x - car_length + caboose_to_base_link);
+        this_free_path_length = std::min(this_free_path_length, x - car_length);
       } else {
         *max_clearance = std::min(*max_clearance, std::abs(y) - (car_width/2));
       }
