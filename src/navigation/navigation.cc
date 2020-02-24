@@ -60,7 +60,7 @@ namespace navigation {
     robot_vel_(0, 0),
     robot_omega_(0),
     odom_loc_(0,0),
-    nav_complete_(false),
+    nav_complete_(true),
     nav_goal_loc_(0, 0),
     nav_goal_angle_(0),
     startup(true),
@@ -121,6 +121,7 @@ namespace navigation {
 
       if  (current_curvature == -1.0){
         best_score = current_path_score -1;}
+
       if (current_path_score > best_score){
         bestOption = currentOption; 
         best_score = current_path_score;
@@ -192,25 +193,26 @@ namespace navigation {
     }
   }
 
-void Navigation::CalculateFreePathLength(PathOption* path) {
-  // calculate the free path length using the point cloud data
-  // default free path length = range of the sensor
-  path->free_path_length = 10;
-  float w = (car_width / 2) + w_safety_margin;
-  float h = car_length + h_safety_margin;
-  if (std::abs(path->curvature) <= kEpsilon){
-    // std::cout<<"Going straight"<<std::endl;
-    for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
-      Vector2f p = *i;
-      float x = p[0];
-      float y = p[1];
-      if (std::abs(y) < w) {
-        if ((x - h) < path->free_path_length) {
-          path->free_path_length = x - h;
+  void Navigation::CalculateFreePathLength(PathOption* path) {
+    // calculate the free path length using the point cloud data
+    // default free path length = range of the sensor
+    path->free_path_length = 10;
+    float w = (car_width / 2) + w_safety_margin;
+    float h = car_length + h_safety_margin;
+    if (std::abs(path->curvature) <= kEpsilon){
+      // std::cout<<"Going straight"<<std::endl;
+      for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
+        Vector2f p = *i;
+        float x = p[0];
+        float y = p[1];
+        if (std::abs(y) < w) {
+          if ((x - h) < path->free_path_length) {
+            path->free_path_length = x - h;
+          }
         }
       }
     }
-  } else {
+    else {
     float radius = 1/path->curvature;
     Vector2f c(0, radius);
     float abs_radius = std::abs(radius);
@@ -237,6 +239,7 @@ void Navigation::CalculateFreePathLength(PathOption* path) {
         if (abs_radius * phi < path->free_path_length) {
           path->free_path_length = abs_radius * phi;
           path->theta_max = theta;
+
         }
       }
     }
@@ -258,5 +261,6 @@ void Navigation::Run() {
   msg.curvature = bestOption->curvature;
   drive_pub_.publish(msg);
 }
+
 
 }  // namespace navigation
