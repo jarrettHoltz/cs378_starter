@@ -108,7 +108,7 @@ namespace navigation {
   }
 
   void Navigation::FindBestPath() {
-    float best_score = -std::numeric_limits<float>::infinity();
+    float best_score = -50000.0;
     for (float current_curvature=-1.0; current_curvature<=1.0; current_curvature+=0.1) {
       PathOption* currentOption = new PathOption();
       currentOption->curvature = current_curvature;
@@ -116,6 +116,7 @@ namespace navigation {
       ComputeClearance(currentOption);
       ComputeDistanceToGoal(currentOption);
       float current_path_score = currentOption->free_path_length + w1 * currentOption->clearance + w2 * currentOption->distance_to_goal;
+      std::cout << "#####curvature: " << currentOption->curvature << ", score: " <<  current_path_score << ", free_path_length: " << currentOption->free_path_length << ", max_clearance: " << currentOption->clearance << ", distance_to_goal: " << currentOption->distance_to_goal << std::endl;
       if (current_path_score > best_score){
         bestOption = currentOption; 
         best_score = current_path_score;
