@@ -94,7 +94,6 @@ namespace navigation {
       startup = !startup;
     }
     distance_travelled += (loc - odom_loc_).norm();
-    carrot -= (loc - odom_loc_).norm();
     robot_loc_ += loc - odom_loc_;
     robot_angle_ = angle;
     robot_vel_ = vel;
@@ -132,7 +131,7 @@ namespace navigation {
   void Navigation::ComputeDistanceToGoal(PathOption* option) {
     // straight case
     if (std::abs(option->curvature) <= kEpsilon) {
-      option->distance_to_goal = carrot - option->free_path_length; 
+      option->distance_to_goal = std::max(carrot - option->free_path_length,0.0f); 
     } else {
       // dist
       float r = 1 / option->curvature;
@@ -173,7 +172,7 @@ namespace navigation {
 
         if (std::abs((c-p).norm()-abs_r) < max_clearance && theta > 0 && theta < option->theta_max) {
           // compute clearance 
-          if ((c - p).norm() > r) {
+          if ((c - p).norm() > abs_r) {
             float r2 = std::pow((abs_r+w)*(abs_r+w) + h*h, 0.5); 
             clearance = (c - p).norm() - r2;
           } else {

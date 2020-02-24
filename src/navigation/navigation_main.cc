@@ -67,7 +67,7 @@ DEFINE_string(init_topic,
               "initialpose",
               "Name of ROS topic for initialization");
 DEFINE_string(map, "maps/GDC1.txt", "Name of vector map file");
-DEFINE_double(carrot, 1.0, "Carrot for receding local goal");
+DEFINE_double(carrot, 2.0, "Carrot for receding local goal");
 
 bool run_ = true;
 sensor_msgs::LaserScan last_laser_msg_;
