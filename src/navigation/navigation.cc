@@ -74,7 +74,8 @@ Navigation::Navigation(const string& map_file, ros::NodeHandle* n, const float d
   global_viz_msg_ = visualization::NewVisualizationMessage(
       "map", "navigation_global");
   InitRosHeader("base_link", &drive_msg_.header);
-  toc = new Controller(distance, std::max(std::min(curvature, 1.0f), -1.0f));
+  toc = new Controller(distance);
+  this->curvature = curvature;
 }
 
 void Navigation::SetNavGoal(const Vector2f& loc, float angle) {
@@ -113,7 +114,6 @@ float Navigation::CalculateFreePathLength() {
   float free_path_length = 10;
   float w = (car_width / 2) + w_safety_margin;
   float h = car_length + h_safety_margin;
-  float curvature = toc->getCurvature();
   if (std::abs(curvature) <= kEpsilon){
     // std::cout<<"Going straight"<<std::endl;
     for (std::vector<Vector2f>::const_iterator i = point_cloud.begin(); i != point_cloud.end(); ++i){
@@ -136,12 +136,17 @@ float Navigation::CalculateFreePathLength() {
       Vector2f p = *i;
       float x = p[0];
       float y = p[1];
-      float theta = atan2(x, radius-y);
+      float theta;
+      if (curvature > 0) {
+        theta = atan2(x, radius-y);
+      } else {
+        theta = atan2(x, y - radius);
+      }
       float p_norm = (p-c).norm();
       // Obstacle detected
       if (p_norm >= (r1-kEpsilon) && p_norm <= (r2+kEpsilon) && theta > 0){
         // recalculate free path length 
-        float omega = atan2(h, radius - w);
+        float omega = atan2(h, abs_r - w);
         float phi = theta - omega;
         if (radius * phi < free_path_length) {
           free_path_length = radius * phi;
@@ -169,7 +174,7 @@ void Navigation::Run() {
   } else {
   	msg.velocity = toc->getVelocity(distance_travelled, current_speed);
   }
-  msg.curvature = toc->getCurvature();
+  msg.curvature = curvature;
   drive_pub_.publish(msg);
 }
 

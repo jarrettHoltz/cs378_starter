@@ -21,11 +21,10 @@ using std::vector;
 using namespace math_util;
 using namespace ros_helpers;
 
-Controller::Controller(const float total_distance, const float curvature) :
+Controller::Controller(const float total_distance) :
   current_speed(0.0),
   distance_travelled(0.0) {
     this->total_distance = total_distance;
-    this->curvature=curvature;
   }
 
 bool Controller::distance_left(Phase p) {
@@ -96,8 +95,4 @@ float Controller::getVelocity(float distance, float speed){
 float Controller::getVelocity(float distance, float speed, float free_path_length){
   total_distance = free_path_length + distance;
   return getVelocity(distance, speed); 
-}
-
-float Controller::getCurvature(){
-	return curvature;
 }
