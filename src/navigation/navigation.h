@@ -46,7 +46,7 @@ class Navigation {
  public:
 
    // Constructor
-  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, const float distance_forward, const float curvature, const bool obstacle);
+  explicit Navigation(const std::string& map_file, ros::NodeHandle* n, float x, float y);
 
   // Used in callback from localization to update position.
   void UpdateLocation(const Eigen::Vector2f& loc, float angle);
@@ -95,9 +95,7 @@ class Navigation {
   bool startup;
 
   // distance to move forward for 1-D TOC
-  float curvature;
   float distance_travelled;
-  bool obstacle;
 
   // logic to calculate free path length
   float CalculateFreePathLength();
