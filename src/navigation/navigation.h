@@ -115,14 +115,14 @@ class Navigation {
   static constexpr float car_width = 0.281;
   static constexpr float car_length = 0.535;
   static constexpr float h_safety_margin = 0.01;
-  static constexpr float w_safety_margin = 0.07;
+  static constexpr float w_safety_margin = 0.05;
 
 
   // max clearance and weights for scoring function
 
-  static constexpr float max_clearance = 0.3;
-  static constexpr float w1 = 3.0;
-  static constexpr float w2 = -3.0;
+  static constexpr float max_clearance = 0.4;
+  static constexpr float w1 = 4.0;
+  static constexpr float w2 = -1.0;
 
   // 1-D TOC
   Controller* toc;

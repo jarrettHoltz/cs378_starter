@@ -113,8 +113,8 @@ namespace navigation {
       PathOption* currentOption = new PathOption();
       currentOption->curvature = current_curvature;
       CalculateFreePathLength(currentOption);
-      ComputeClearance(currentOption);
       ComputeDistanceToGoal(currentOption);
+      ComputeClearance(currentOption);
       float current_path_score = currentOption->free_path_length + w1 * currentOption->clearance + w2 * currentOption->distance_to_goal;
       std::cout << "#####curvature: " << current_curvature << ", cost: " <<  current_path_score << ", max_free_path_length: " << currentOption->free_path_length << ", max_clearance: " << currentOption->clearance << ", distance_to_goal: " << currentOption->distance_to_goal << std::endl;
 
@@ -131,7 +131,11 @@ namespace navigation {
   void Navigation::ComputeDistanceToGoal(PathOption* option) {
     // straight case
     if (std::abs(option->curvature) <= kEpsilon) {
-      option->distance_to_goal = std::max(carrot - option->free_path_length,0.0f); 
+      option->distance_to_goal = std::max(carrot - option->free_path_length,0.0f);
+      option->free_path_length = std::min(option->free_path_length,carrot);
+      if (option->free_path_length < carrot){
+      	option->clearance=0.0;} else {
+      	option->clearance=max_clearance;}
     } else {
       // dist
       
@@ -142,26 +146,33 @@ namespace navigation {
       Vector2f local_goal(carrot, 0);
       Vector2f c(0, r);
       Vector2f tangent_point = (local_goal - c).normalized() * std::abs(r) + c;
-      std::cout<<tangent_point<<std::endl;
+      //std::cout<<"point: "<<tangent_point<<std::endl;
+
       float tangent_theta;
       if (option->curvature < 0){
         tangent_theta = atan2(tangent_point[0], tangent_point[1]-r);
       } else {
         tangent_theta = atan2(tangent_point[0], r-tangent_point[1]);}
+       //std::cout<<"tangent_theta: "<<tangent_theta<<", theta_max:"<<option->theta_max<<std::endl;
+      if (option->theta_max==0 && option->free_path_length==10){
+      	option->theta_max = tangent_theta;
+      }
       if (tangent_theta  <= option->theta_max) {
-        // when cloest point of approach is in the free path length
+        // when closest point of approach is in the free path length
         std::cout<<tangent_theta<<std::endl;
         option->free_path_length = tangent_theta * std::abs(r);
+        option->theta_max = tangent_theta;
         option->distance_to_goal = (local_goal - tangent_point).norm();
+        option->clearance = max_clearance;
       } else {
-        option->distance_to_goal = (local_goal - fpl_point).norm();}
-      
+        option->distance_to_goal = (local_goal - fpl_point).norm();
+     	option->clearance = 0.0;}
     } 
   }
 
   void Navigation::ComputeClearance(PathOption* option) {
     // straight case
-    option->clearance = max_clearance;
+    //option->clearance = max_clearance;
     float clearance = max_clearance;
     float w = (car_width / 2) + w_safety_margin;
     float h = car_length + h_safety_margin;
@@ -172,6 +183,7 @@ namespace navigation {
       // straight case
       if (std::abs(option->curvature) <= kEpsilon) {
         if (x > 0 && x < option->free_path_length + h && std::abs(y) < max_clearance) {
+        	std::cout<<x<<std::endl;
           clearance = std::abs(y) - w; 
         }
       } else {
@@ -185,7 +197,9 @@ namespace navigation {
         } else {
           theta = atan2(x, r-y);}
         // float p_norm = (p-c).norm();
-
+          // if (std::abs((c-p).norm()-abs_r) < max_clearance) {
+          // 	std::cout<<"theta: "<<theta<<", max:"<<option->theta_max<<std::endl;
+          // }
         if (std::abs((c-p).norm()-abs_r) < max_clearance && theta > 0 && theta < option->theta_max) {
           // compute clearance 
           if ((c - p).norm() > abs_r) {
@@ -195,6 +209,7 @@ namespace navigation {
             float r1 = abs_r - w;
             clearance = r1 - (c - p).norm();
             if (clearance < 0) {
+            	//std::cout<<"!!!!!!!!!"<<std::endl;
               clearance = option->clearance;
             }
           }
