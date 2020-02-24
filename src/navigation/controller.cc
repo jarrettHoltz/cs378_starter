@@ -26,6 +26,37 @@ Controller::Controller() :
   distance_travelled(0.0) {
   }
 
+float Controller::compensate_latency() {
+  float compensation = 0;
+  float interval = latency;
+  while (interval > kEpsilon && !command_buf.empty()) {
+    std::pair<Phase, float> command = command_buf.front();
+    command_buf.pop_front();
+    Phase p = command.first;
+    float phase_time = command.second;
+    float time_running = (interval - phase_time > kEpsilon) ? phase_time : interval;
+    switch (p) {
+      case ACCEL:
+        compensation += 0.5 * max_acceleration * std::pow(time_running, 2) + current_speed * time_running;
+        break;
+      case CRUISE:
+        compensation += current_speed * time_running;
+        break;
+      case DECEL:
+        compensation += 0.5 * -max_acceleration * std::pow(time_running, 2) + current_speed * time_running;
+        break;
+    }
+
+    // check if we need to put command back on the queue since there is runtime left over
+    if (phase_time - time_running > kEpsilon) {
+      std::pair<Phase, float> push_front = make_pair(p, phase_time - time_running);
+      command_buf.push_front(push_front); 
+    }
+    interval -= time_running;
+  }
+  return compensation;
+}
+
 bool Controller::distance_left(Phase p) {
   switch (p) {
     case ACCEL: {
@@ -42,32 +73,10 @@ bool Controller::distance_left(Phase p) {
   }
 }
 
-// code used for Dead Reckoning, part 1
-float Controller::getVelocity(){
-  if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
-    // update distance travelled
-    distance_travelled += current_speed * timestep + 0.5 * max_acceleration * std::pow(timestep, 2);
-    // accelerate, while capping at max_speed
-    current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
-  } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
-    // update distance travelled
-    distance_travelled += max_speed * timestep;
-    // cruise
-  } else {
-    // calculate deceleration given the distance left
-    float distance_left = total_distance - distance_travelled;
-    float deceleration = std::pow(current_speed, 2) / (2 * distance_left);
-
-    distance_travelled += current_speed * timestep - 0.5 * deceleration * std::pow(timestep, 2);
-    current_speed = std::max(0.0f, current_speed - deceleration * timestep); 
-  }
-  return current_speed;
-}
-
 // Code used for odometry given distance and speed, part 2
 float Controller::getVelocity(float distance, float speed){
   current_speed = speed;
-  distance_travelled = distance + current_speed * latency;
+  distance_travelled = distance + compensate_latency();
   // if travelled distance, simply return 0
   if (distance_travelled > total_distance + kEpsilon) {
     return 0.0;
@@ -78,13 +87,16 @@ float Controller::getVelocity(float distance, float speed){
   if (current_speed < max_speed - kEpsilon && distance_left(ACCEL)) {
     // accelerate
     current_speed = std::min(current_speed + max_acceleration * timestep, max_speed);
+    command_buf.push_back(make_pair(ACCEL, timestep));
   } else if (std::abs(current_speed - max_speed) <= kEpsilon && distance_left(CRUISE)) {
     // Do nothing, since speed is at cruise speed
+    command_buf.push_back(make_pair(CRUISE, timestep));
   } else {
     // calculate deceleration given the distance left
     float dist_left = total_distance - distance_travelled;
     float deceleration = std::pow(current_speed, 2) / (2 * dist_left);
     current_speed = std::max(0.0f, current_speed - deceleration * timestep);
+    command_buf.push_back(make_pair(DECEL, timestep));
   }
   // std::cout<<curvature<<std::endl;
   return current_speed;

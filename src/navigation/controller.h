@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "eigen3/Eigen/Dense"
+#include "simple_queue.h"
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
@@ -17,6 +18,7 @@ class Controller {
     float getVelocity();
     float getVelocity(float distance, float speed);
     float getVelocity(float distance, float speed, float free_path_length);
+    float compensate_latency();
 
   private:
     // speed constraints
@@ -28,6 +30,9 @@ class Controller {
     static constexpr float timestep = 0.05f;
     static constexpr float kEpsilon = 1e-5;
     static constexpr float latency = 0.12;
+
+    // command buffer to forward predict latency
+    std::deque<std::pair<Phase, float>> command_buf;    
 };
 
 #endif  // CONTROLLER_H
