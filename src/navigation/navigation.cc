@@ -159,7 +159,6 @@ namespace navigation {
       }
       if (tangent_theta  <= option->theta_max) {
         // when closest point of approach is in the free path length
-        std::cout<<tangent_theta<<std::endl;
         option->free_path_length = tangent_theta * std::abs(r);
         option->theta_max = tangent_theta;
         option->distance_to_goal = (local_goal - tangent_point).norm();
@@ -183,7 +182,7 @@ namespace navigation {
       // straight case
       if (std::abs(option->curvature) <= kEpsilon) {
         if (x > 0 && x < option->free_path_length + h && std::abs(y) < max_clearance) {
-        	std::cout<<x<<std::endl;
+        	//std::cout<<x<<std::endl;
           clearance = std::abs(y) - w; 
         }
       } else {

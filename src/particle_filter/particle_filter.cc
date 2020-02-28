@@ -96,15 +96,28 @@ void ParticleFilter::ObserveLaser(const vector<float>& ranges,
 
 void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
                                      const float odom_angle) {
-	if (!odom_initialized_) {
-		prev_odom_loc_ = odom_loc;
-	  prev_odom_angle_ = odom_angle;
-	  odom_initialized_ = true;
-	} 
-	for (auto particle : particles_)
-	{
-	  particle.loc += (odom_loc - prev_odom_loc_);
-	  particle.angle += (odom_angle - prev_odom_angle_);
+	// if (!odom_initialized_) {
+	// 	prev_odom_loc_ = odom_loc;
+	//   prev_odom_angle_ = odom_angle;
+	//   odom_initialized_ = true;
+	// } 
+	// for (auto it = particles_.begin(); it!=particles_.end(); ++it)
+	// {
+	// 	Particle this_particle = *it;
+	// 	// cout <<this_particle<<endl;
+	//   this_particle.loc += (odom_loc - prev_odom_loc_);
+	//   this_particle.angle += (odom_angle - prev_odom_angle_);
+	// }
+	if (!odom_initialized_){
+		odom_initialized_ = true;
+	} else {
+		auto expected_translation = odom_loc - prev_odom_loc_;
+		for (int i = 0; i < (int)particles_.size(); i++){
+			// particles_[i].loc += (odom_loc - prev_odom_loc_);
+			particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*expected_translation[0]);
+			particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*expected_translation[1]);
+			particles_[i].angle += (odom_angle - prev_odom_angle_);
+		}
 	}
 	prev_odom_loc_ = odom_loc;
 	prev_odom_angle_ = odom_angle;
@@ -113,19 +126,19 @@ void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
 void ParticleFilter::Initialize(const string& map_file,
                                 const Vector2f& loc,
                                 const float angle) {
-	if (odom_initialized_){
-		particles_.clear();
-	}
+
+	particles_.clear();
 	for (int i = 0; i < FLAGS_num_particles; i++){
 		Particle this_particle;
 		this_particle.loc = loc;
+		this_particle.loc[0] += rng_.Gaussian(0, k1);
+		this_particle.loc[1] += rng_.Gaussian(0, k1);
 		this_particle.angle = angle;
 		this_particle.weight = 1.0f;
 		particles_.push_back(this_particle);
 	}
-	
 	map_ = VectorMap(map_file);
-	
+	odom_initialized_ = false;
 }
 
 void ParticleFilter::GetLocation(Eigen::Vector2f* loc, float* angle) const {
