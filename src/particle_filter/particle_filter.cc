@@ -130,8 +130,8 @@ void ParticleFilter::Initialize(const string& map_file,
                                 const float angle) {
 
 	particles_.clear();
-  prev_odom_loc_= loc;
-  prev_odom_angle_ = angle;
+  //prev_odom_loc_= loc;
+  //prev_odom_angle_ = angle;
 	for (int i = 0; i < FLAGS_num_particles; i++){
 		Particle this_particle;
 		this_particle.loc[0] = loc[0] + rng_.Gaussian(0, 0.1);
