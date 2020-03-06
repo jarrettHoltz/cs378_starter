@@ -13,10 +13,10 @@
 //  If not, see <http://www.gnu.org/licenses/>.
 //========================================================================
 /*!
-\file    particle-filter.cc
-\brief   Particle Filter Starter Code
-\author  Joydeep Biswas, (C) 2019
-*/
+  \file    particle-filter.cc
+  \brief   Particle Filter Starter Code
+  \author  Joydeep Biswas, (C) 2019
+  */
 //========================================================================
 
 #include <algorithm>
@@ -54,98 +54,99 @@ DEFINE_double(num_particles, 50, "Number of particles");
 
 namespace particle_filter {
 
-config_reader::ConfigReader config_reader_({"config/particle_filter.lua"});
+  config_reader::ConfigReader config_reader_({"config/particle_filter.lua"});
 
-ParticleFilter::ParticleFilter() :
+  ParticleFilter::ParticleFilter() :
     prev_odom_loc_(0, 0),
     prev_odom_angle_(0),
     odom_initialized_(false) {}
 
-void ParticleFilter::GetParticles(vector<Particle>* particles) const {
-  *particles = particles_;
-}
+  void ParticleFilter::GetParticles(vector<Particle>* particles) const {
+    *particles = particles_;
+  }
 
-void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
-                                            const float angle,
-                                            int num_ranges,
-                                            float range_min,
-                                            float range_max,
-                                            float angle_min,
-                                            float angle_max,
-                                            vector<Vector2f>* scan_ptr) {
+  void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
+      const float angle,
+      int num_ranges,
+      float range_min,
+      float range_max,
+      float angle_min,
+      float angle_max,
+      vector<Vector2f>* scan_ptr) {
 
-}
+  }
 
-void ParticleFilter::Update(const vector<float>& ranges,
-                            float range_min,
-                            float range_max,
-                            float angle_min,
-                            float angle_max,
-                            Particle* p_ptr) {
-}
+  void ParticleFilter::Update(const vector<float>& ranges,
+      float range_min,
+      float range_max,
+      float angle_min,
+      float angle_max,
+      Particle* p_ptr) {
+  }
 
-void ParticleFilter::Resample() {
-}
+  void ParticleFilter::Resample() {
+  }
 
-void ParticleFilter::ObserveLaser(const vector<float>& ranges,
-                                  float range_min,
-                                  float range_max,
-                                  float angle_min,
-                                  float angle_max) {
-}
+  void ParticleFilter::ObserveLaser(const vector<float>& ranges,
+      float range_min,
+      float range_max,
+      float angle_min,
+      float angle_max) {
+  }
 
-void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
-                                     const float odom_angle) {
-	// if (!odom_initialized_) {
-	// 	prev_odom_loc_ = odom_loc;
-	//   prev_odom_angle_ = odom_angle;
-	//   odom_initialized_ = true;
-	// } 
-	// for (auto it = particles_.begin(); it!=particles_.end(); ++it)
-	// {
-	// 	Particle this_particle = *it;
-	// 	// cout <<this_particle<<endl;
-	//   this_particle.loc += (odom_loc - prev_odom_loc_);
-	//   this_particle.angle += (odom_angle - prev_odom_angle_);
-	// }
-	if (!odom_initialized_){
-		odom_initialized_ = true;
-	} else {
-		auto expected_translation = odom_loc - prev_odom_loc_;
-    auto translation_magnitude = expected_translation.norm();
-    auto expected_rotation = std::abs(odom_angle - prev_odom_angle_); 
-		for (int i = 0; i < (int)particles_.size(); i++){
-			// particles_[i].loc += (odom_loc - prev_odom_loc_);
-			particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * expected_rotation);
-			particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * expected_rotation);
-			particles_[i].angle += rng_.Gaussian(odom_angle - prev_odom_angle_, k3*translation_magnitude + k4 * expected_rotation);
-		}
-	}
-	prev_odom_loc_ = odom_loc;
-	prev_odom_angle_ = odom_angle;
-}
+  void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
+      const float odom_angle) {
+    if (!odom_initialized_){
+      odom_initialized_ = true;
+    } else {
+      // translation
+      Eigen::Rotation2Df rot(-odom_angle);
+      auto delta_t_base_link = rot * (odom_loc - prev_odom_loc_);
+      Eigen::Rotation2Df rot1(theta_map);
+      auto new_map_loc = map_loc + rot1 * delta_t_base_link; 
+      auto expected_translation = new_map_loc - map_loc;
+      map_loc = new_map_loc;
+      auto translation_magnitude = expected_translation.norm();
 
-void ParticleFilter::Initialize(const string& map_file,
-                                const Vector2f& loc,
-                                const float angle) {
+      //rotation
+      auto delta_theta_base_link = odom_angle - prev_odom_angle_;
+      auto new_theta_map = theta_map + delta_theta_base_link;
+      auto expected_rotation = std::abs(new_theta_map - theta_map); 
+      theta_map = new_theta_map;
+      for (int i = 0; i < (int)particles_.size(); i++){
+        // particles_[i].loc += (odom_loc - prev_odom_loc_);
+        particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * expected_rotation);
+        particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * expected_rotation);
+        particles_[i].angle += rng_.Gaussian(odom_angle - prev_odom_angle_, k3*translation_magnitude + k4 * expected_rotation);
+      }
+    }
+    prev_odom_loc_ = odom_loc;
+    prev_odom_angle_ = odom_angle;
+  }
 
-	particles_.clear();
-  //prev_odom_loc_= loc;
-  //prev_odom_angle_ = angle;
-	for (int i = 0; i < FLAGS_num_particles; i++){
-		Particle this_particle;
-		this_particle.loc[0] = loc[0] + rng_.Gaussian(0, 0.1);
-    this_particle.loc[1] = loc[1] + rng_.Gaussian(0, 0.1);
-		this_particle.angle = angle + rng_.Gaussian(0, 0.1);
-		this_particle.weight = 1.0f;
-		particles_.push_back(this_particle);
-	}
-	map_ = VectorMap(map_file);
-	odom_initialized_ = false;
-}
+  void ParticleFilter::Initialize(const string& map_file,
+      const Vector2f& loc,
+      const float angle) {
 
-void ParticleFilter::GetLocation(Eigen::Vector2f* loc, float* angle) const {
-}
+    particles_.clear();
+    theta_map = angle;
+    map_loc = loc;
+    //prev_odom_loc_= loc;
+    //prev_odom_angle_ = angle;
+    for (int i = 0; i < FLAGS_num_particles; i++){
+      Particle this_particle;
+      this_particle.loc[0] = loc[0] + rng_.Gaussian(0, 0.1);
+      this_particle.loc[1] = loc[1] + rng_.Gaussian(0, 0.1);
+      this_particle.angle = angle + rng_.Gaussian(0, 0.1);
+      this_particle.weight = 1.0f;
+      particles_.push_back(this_particle);
+    }
+    map_ = VectorMap(map_file);
+    odom_initialized_ = false;
+  }
+
+  void ParticleFilter::GetLocation(Eigen::Vector2f* loc, float* angle) const {
+  }
 
 
 }  // namespace particle_filter

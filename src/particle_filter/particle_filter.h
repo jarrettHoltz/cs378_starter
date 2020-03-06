@@ -108,6 +108,8 @@ class ParticleFilter {
   double k2 = 0.1;
   double k3 = 0.1;
   double k4 = 0.1;
+  double theta_map;
+  Eigen::Vector2f map_loc;
 };
 }  // namespace slam
 
