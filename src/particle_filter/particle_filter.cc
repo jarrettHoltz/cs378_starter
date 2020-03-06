@@ -100,7 +100,7 @@ namespace particle_filter {
       odom_initialized_ = true;
     } else {
       // translation
-      Eigen::Rotation2Df rot(-odom_angle);
+      Eigen::Rotation2Df rot(-prev_odom_angle_);
       auto delta_t_base_link = rot * (odom_loc - prev_odom_loc_);
       Eigen::Rotation2Df rot1(theta_map);
       auto new_map_loc = map_loc + rot1 * delta_t_base_link; 
