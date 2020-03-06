@@ -112,11 +112,13 @@ void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
 		odom_initialized_ = true;
 	} else {
 		auto expected_translation = odom_loc - prev_odom_loc_;
+    auto translation_magnitude = expected_translation.norm();
+    auto expected_rotation = std::abs(odom_angle - prev_odom_angle_); 
 		for (int i = 0; i < (int)particles_.size(); i++){
 			// particles_[i].loc += (odom_loc - prev_odom_loc_);
-			particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*expected_translation[0]);
-			particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*expected_translation[1]);
-			particles_[i].angle += (odom_angle - prev_odom_angle_);
+			particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * expected_rotation);
+			particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * expected_rotation);
+			particles_[i].angle += rng_.Gaussian(odom_angle - prev_odom_angle_, k3*translation_magnitude + k4 * expected_rotation);
 		}
 	}
 	prev_odom_loc_ = odom_loc;

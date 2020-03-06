@@ -105,6 +105,9 @@ class ParticleFilter {
 
   // Milestone 2
   double k1 = 0.1;
+  double k2 = 0.1;
+  double k3 = 0.1;
+  double k4 = 0.1;
 };
 }  // namespace slam
 
