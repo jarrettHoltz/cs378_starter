@@ -134,8 +134,9 @@ void ParticleFilter::Initialize(const string& map_file,
   prev_odom_angle_ = angle;
 	for (int i = 0; i < FLAGS_num_particles; i++){
 		Particle this_particle;
-		this_particle.loc = loc;
-		this_particle.angle = angle;
+		this_particle.loc[0] = loc[0] + rng_.Gaussian(0, 1);
+    this_particle.loc[1] = loc[1] + rng_.Gaussian(0, 1);
+		this_particle.angle = angle + rng_.Gaussian(0, 1);
 		this_particle.weight = 1.0f;
 		particles_.push_back(this_particle);
 	}
