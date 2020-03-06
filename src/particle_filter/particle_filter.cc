@@ -112,13 +112,13 @@ namespace particle_filter {
       auto delta_theta_base_link = odom_angle - prev_odom_angle_;
       auto new_theta_map = theta_map + delta_theta_base_link;
       auto expected_rotation = std::abs(new_theta_map - theta_map); 
-      theta_map = new_theta_map;
       for (int i = 0; i < (int)particles_.size(); i++){
         // particles_[i].loc += (odom_loc - prev_odom_loc_);
         particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * expected_rotation);
         particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * expected_rotation);
-        particles_[i].angle += rng_.Gaussian(odom_angle - prev_odom_angle_, k3*translation_magnitude + k4 * expected_rotation);
+        particles_[i].angle += rng_.Gaussian(new_theta_map - theta_map, k3*translation_magnitude + k4 * expected_rotation);
       }
+      theta_map = new_theta_map;
     }
     prev_odom_loc_ = odom_loc;
     prev_odom_angle_ = odom_angle;
