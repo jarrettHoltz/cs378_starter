@@ -109,24 +109,24 @@ namespace particle_filter {
       cout<<"new_map_loc = "<<new_map_loc<<endl;
       cout<<"map_loc = "<<map_loc<<endl;
       // cout<<map_loc + rot1 * delta_t_base_link<<endl;
-      auto expected_translation = new_map_loc - map_loc;
+      Vector2f expected_translation = new_map_loc - map_loc;
       //cout<<prev_odom_loc_<<endl;
       //cout<<odom_loc<<endl;
       map_loc = new_map_loc;
-      auto translation_magnitude = expected_translation.norm();
+      double translation_magnitude = expected_translation.norm();
 
       //rotation
-      auto delta_theta_base_link = odom_angle - prev_odom_angle_;
-      auto new_theta_map = theta_map + delta_theta_base_link;
-      auto diff_angle = new_theta_map - theta_map;
-      auto expected_rotation = std::abs(new_theta_map - theta_map); 
+      float delta_theta_base_link = odom_angle - prev_odom_angle_;
+      float new_theta_map = theta_map + delta_theta_base_link;
+      float diff_angle = new_theta_map - theta_map;
+      float rotation_magnitude = std::abs(new_theta_map - theta_map); 
       
       theta_map = new_theta_map;
       for (int i = 0; i < (int)particles_.size(); i++){
         // particles_[i].loc += (odom_loc - prev_odom_loc_);
-        particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * expected_rotation);
-        particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * expected_rotation);
-        particles_[i].angle += rng_.Gaussian(diff_angle, k3*translation_magnitude + k4 * expected_rotation);
+        particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * rotation_magnitude);
+        particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * rotation_magnitude);
+        particles_[i].angle += rng_.Gaussian(diff_angle, k3*translation_magnitude + k4 * rotation_magnitude);
       }
     }
     prev_odom_loc_ = odom_loc;
