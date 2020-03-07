@@ -101,10 +101,17 @@ namespace particle_filter {
     } else {
       // translation
       Eigen::Rotation2Df rot(-prev_odom_angle_);
-      auto delta_t_base_link = rot * (odom_loc - prev_odom_loc_);
+      Vector2f delta_t_base_link = rot * (odom_loc - prev_odom_loc_);
       Eigen::Rotation2Df rot1(theta_map);
-      auto new_map_loc = map_loc + rot1 * delta_t_base_link; 
+      // auto new_map_loc = map_loc + rot1 * delta_t_base_link; 
+      Vector2f new_map_loc = map_loc + rot1 * delta_t_base_link;
+      cout<<"rot1 * delta_t_base_link = "<<rot1 * delta_t_base_link<<endl;
+      cout<<"new_map_loc = "<<new_map_loc<<endl;
+      cout<<"map_loc = "<<map_loc<<endl;
+      // cout<<map_loc + rot1 * delta_t_base_link<<endl;
       auto expected_translation = new_map_loc - map_loc;
+      //cout<<prev_odom_loc_<<endl;
+      //cout<<odom_loc<<endl;
       map_loc = new_map_loc;
       auto translation_magnitude = expected_translation.norm();
 
@@ -113,6 +120,7 @@ namespace particle_filter {
       auto new_theta_map = theta_map + delta_theta_base_link;
       auto diff_angle = new_theta_map - theta_map;
       auto expected_rotation = std::abs(new_theta_map - theta_map); 
+      
       theta_map = new_theta_map;
       for (int i = 0; i < (int)particles_.size(); i++){
         // particles_[i].loc += (odom_loc - prev_odom_loc_);
