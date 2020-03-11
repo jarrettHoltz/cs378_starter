@@ -65,6 +65,8 @@ namespace particle_filter {
     *particles = particles_;
   }
 
+
+  // CP 5
   void ParticleFilter::GetPredictedPointCloud(const Vector2f& loc,
       const float angle,
       int num_ranges,
@@ -73,8 +75,23 @@ namespace particle_filter {
       float angle_min,
       float angle_max,
       vector<Vector2f>* scan_ptr) {
+  	vector<float> scan;
+    map_.GetPredictedScan(loc, range_min, range_max, angle_min, angle_max,num_ranges, &scan);
 
+    // construct point cloud
+    const Vector2f kLaserLoc(0.2, 0);
+	  vector<Vector2f> point_cloud_;
+	  int range_idx = 0;
+	  float angle_increment = (angle_max - angle_min)/num_ranges;
+	  for (float this_angle = angle_min; this_angle < angle_max; this_angle += angle_increment){
+	    float this_range = scan[++range_idx];
+	    if (this_range > range_min && this_range < range_max){
+	      point_cloud_.push_back(loc + kLaserLoc + Vector2f(cos(this_angle) * this_range, sin(this_angle) * this_range));
+	    }
+	  }
+  	*scan_ptr = point_cloud_;
   }
+
 
   void ParticleFilter::Update(const vector<float>& ranges,
       float range_min,
@@ -94,6 +111,8 @@ namespace particle_filter {
       float angle_max) {
   }
 
+
+  // CP 4
   void ParticleFilter::ObserveOdometry(const Vector2f& odom_loc,
       const float odom_angle) {
     if (!odom_initialized_){
@@ -103,15 +122,8 @@ namespace particle_filter {
       Eigen::Rotation2Df rot(-prev_odom_angle_);
       Vector2f delta_t_base_link = rot * (odom_loc - prev_odom_loc_);
       Eigen::Rotation2Df rot1(theta_map);
-      // auto new_map_loc = map_loc + rot1 * delta_t_base_link; 
       Vector2f new_map_loc = map_loc + rot1 * delta_t_base_link;
-      cout<<"rot1 * delta_t_base_link = "<<rot1 * delta_t_base_link<<endl;
-      cout<<"new_map_loc = "<<new_map_loc<<endl;
-      cout<<"map_loc = "<<map_loc<<endl;
-      // cout<<map_loc + rot1 * delta_t_base_link<<endl;
       Vector2f expected_translation = new_map_loc - map_loc;
-      //cout<<prev_odom_loc_<<endl;
-      //cout<<odom_loc<<endl;
       map_loc = new_map_loc;
       double translation_magnitude = expected_translation.norm();
 
@@ -123,7 +135,6 @@ namespace particle_filter {
       
       theta_map = new_theta_map;
       for (int i = 0; i < (int)particles_.size(); i++){
-        // particles_[i].loc += (odom_loc - prev_odom_loc_);
         particles_[i].loc[0] += rng_.Gaussian(expected_translation[0], k1*translation_magnitude + k2 * rotation_magnitude);
         particles_[i].loc[1] += rng_.Gaussian(expected_translation[1], k1*translation_magnitude + k2 * rotation_magnitude);
         particles_[i].angle += rng_.Gaussian(diff_angle, k3*translation_magnitude + k4 * rotation_magnitude);
@@ -133,6 +144,7 @@ namespace particle_filter {
     prev_odom_angle_ = odom_angle;
   }
 
+  // CP 4
   void ParticleFilter::Initialize(const string& map_file,
       const Vector2f& loc,
       const float angle) {
@@ -140,8 +152,6 @@ namespace particle_filter {
     particles_.clear();
     theta_map = angle;
     map_loc = loc;
-    //prev_odom_loc_= loc;
-    //prev_odom_angle_ = angle;
     for (int i = 0; i < FLAGS_num_particles; i++){
       Particle this_particle;
       this_particle.loc[0] = loc[0] + rng_.Gaussian(0, 0.1);
@@ -155,6 +165,20 @@ namespace particle_filter {
   }
 
   void ParticleFilter::GetLocation(Eigen::Vector2f* loc, float* angle) const {
+  	Vector2f mean_loc(0,0);
+  	Vector2f mean_angle_vector(0,0);
+  	for (int i = 0; i < (int)particles_.size(); i++){
+  		mean_loc += particles_[i].loc;
+  		mean_angle_vector += Vector2f(sin(particles_[i].angle),cos(particles_[i].angle));
+    }
+    mean_loc /= (int)particles_.size();
+    mean_angle_vector /= (int)particles_.size();
+    *loc = mean_loc;
+    if (mean_angle_vector == Vector2f(0,0)){
+    	*angle = 0;
+    } else {
+    	*angle = atan2(mean_angle_vector[0],mean_angle_vector[1]);
+  	}
   }
 
 
